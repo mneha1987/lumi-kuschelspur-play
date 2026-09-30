@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#347f6f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Lumi sucht Plüschbär Knopf. Drei Traumwelten, neun Abenteuer und ganz verschiedene Rätsel.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Lumi &amp; die Kuschelspur</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/touch-icon.png">
+  <link rel="icon" href="icons/icon.png">
+  <style>
+    @font-face{font-family:Nunito;src:url('welcome/Nunito.ttf') format('truetype');font-display:swap}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:#cbb6a1;font-family:Nunito,system-ui,sans-serif;color:#28454a}
+    body{background:url('welcome/nursery.png') center/cover fixed}
+    #stage{position:fixed;inset:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden}
+    canvas{width:100%;height:100%;display:block;touch-action:none;outline:none}
+    #welcome,#rotate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4vw;background:linear-gradient(90deg,#f8eddd70,#f8eddd00)}
+    .card{width:min(530px,52vw);padding:clamp(18px,3.4vw,48px);border-radius:32px;background:#fff9e9f5;box-shadow:0 10px 0 #7d695529;text-align:center}
+    .eyebrow{font-size:clamp(12px,1.2vw,17px);color:#357f70;letter-spacing:.12em;text-transform:uppercase;margin:0 0 12px}
+    h1{font-size:clamp(30px,5vw,66px);line-height:1.05;margin:0 0 18px}h1 small{font-size:.48em;display:block;line-height:1.5;margin-top:8px}
+    p{font-size:clamp(13px,1.6vw,19px);line-height:1.45;margin:12px 0}
+    .teddy{width:min(260px,22vw);max-height:67vh;object-fit:contain;filter:drop-shadow(0 15px 8px #8a76583c);animation:float 3.4s ease-in-out infinite}
+    @keyframes float{50%{transform:translateY(-12px) rotate(3deg)}}
+    button{font:inherit;font-size:clamp(17px,2.2vw,27px);width:100%;padding:17px 22px;border:0;border-radius:21px;background:#357f70;color:#fff9e9;box-shadow:0 6px 0 #286554;cursor:pointer;touch-action:manipulation}
+    button:active{transform:translateY(3px);box-shadow:0 3px 0 #286554}button:disabled{opacity:.7;cursor:default}
+    #progress{margin-top:16px;background:#dddbc9;height:10px;border-radius:10px;overflow:hidden}#fill{height:100%;width:0;background:#edb452;transition:width .2s}
+    #status{font-size:14px;color:#506760;min-height:22px}#tip{font-size:12px;color:#687d71;margin-top:16px}
+    #rotate{display:none;background:#fff7e9ed;z-index:3;text-align:center;flex-direction:column;gap:8px;padding:24px}#rotate img{height:25vh;max-height:160px}
+    #rotate strong{font-size:27px}#rotate p{max-width:300px}
+    .hidden{display:none!important}
+    @media(orientation:portrait){#rotate{display:flex}}
+    @media(prefers-reduced-motion:reduce){.teddy{animation:none}}
+  </style>
+</head>
+<body>
+<main id="stage">
+  <canvas id="unity-canvas" width="1280" height="800" tabindex="-1" aria-label="Lumi und die Kuschelspur, Spielbereich"></canvas>
+  <section id="welcome">
+    <div class="card">
+      <p class="eyebrow">Deine Kuschelspur wartet</p>
+      <h1>Lumi<small>&amp; die Kuschelspur</small></h1>
+      <p>Ein kleiner mutiger Sprung.<br>Ein großer Weg zurück zu Knopf.</p>
+      <button id="start">Abenteuer öffnen</button>
+      <div id="progress" class="hidden"><div id="fill"></div></div>
+      <p id="status" role="status"></p>
+      <p id="tip">Auf dem iPhone: Safari → Teilen → Zum Home-Bildschirm.</p>
+    </div>
+    <img class="teddy" src="welcome/teddy.png" alt="Knopf, dein Kuschelbär">
+  </section>
+  <section id="rotate"><img src="welcome/teddy.png" alt=""><strong>Einmal quer kuscheln!</strong><p>Dreh dein iPhone zur Seite, damit Lumi genug Platz zum Hüpfen hat.</p></section>
+</main>
+<script>
+const start=document.getElementById('start'),status=document.getElementById('status');
+const canvas=document.getElementById('unity-canvas');
+let instance,loading=false;
+start.addEventListener('click',async()=>{
+  if(loading)return;loading=true;start.disabled=true;start.textContent='Knopf packt die Kissen …';
+  status.textContent='Beim ersten Mal dauert das Laden einen Moment.';
+  document.getElementById('progress').classList.remove('hidden');
+  const loader=document.createElement('script');loader.src='Build/Web.loader.js';
+  loader.onerror=()=>fail('Die Kuschelspur konnte nicht geladen werden. Bitte prüfe die Verbindung und versuche es erneut.');
+  loader.onload=()=>{
+    createUnityInstance(canvas,{
+      dataUrl:'Build/Web.data.unityweb',frameworkUrl:'Build/Web.framework.js.unityweb',codeUrl:'Build/Web.wasm.unityweb',
+      streamingAssetsUrl:'StreamingAssets',companyName:'Kuschelwerkstatt',productName:'Lumi & die Kuschelspur',productVersion:'1.1.0',
+      devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5),matchWebGLToCanvasSize:true,
+      showBanner:(message,type)=>{if(type==='error')fail('Das Abenteuer konnte auf diesem Browser nicht starten. Bitte öffne es in einer aktuellen Safari-Version.');console[type==='error'?'error':'warn'](message);}
+    },p=>{document.getElementById('fill').style.width=Math.round(p*100)+'%';status.textContent='Traumwelten laden · '+Math.round(p*100)+' %';}).then(game=>{
+      instance=game;document.getElementById('welcome').classList.add('hidden');canvas.focus();
+      if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+    }).catch(error=>{console.error(error);fail('Der Start hat nicht geklappt. Bitte lade die Seite neu und probiere es noch einmal.');});
+  };document.body.appendChild(loader);
+});
+function fail(message){status.textContent=message;start.textContent='Neu versuchen';start.disabled=false;loading=false;start.onclick=()=>location.reload();}
+document.addEventListener('gesturestart',event=>event.preventDefault(),{passive:false});
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
+</script>
+</body>
+</html>
